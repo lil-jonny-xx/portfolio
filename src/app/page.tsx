@@ -1,69 +1,144 @@
-import Image from "next/image";
+import { Contact } from "@/components/contact/Contact";
+import { Hero } from "@/components/hero/Hero";
+import { Intro } from "@/components/hero/Intro";
+import { WorkShowcase, type ShowcaseItem } from "@/components/projects/WorkShowcase";
+import { Skills } from "@/components/skills/Skills";
+import { SystemsExplorer } from "@/components/systems/SystemsExplorer";
+import { Timeline } from "@/components/timeline/Timeline";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { disciplines } from "@/data/disciplines";
+import { site } from "@/data/site";
+import { timeline } from "@/data/timeline";
+import { allProjects, projectIndex } from "@/lib/projects";
 
 export default function Home() {
+  // Only card fields go to the client component.
+  const items: ShowcaseItem[] = [...allProjects]
+    .sort((a, b) => Number(b.featured) - Number(a.featured))
+    .map(({ slug, title, summary, categories, stack, status, diagram, cover, year }) => ({
+      slug,
+      title,
+      summary,
+      categories,
+      stack,
+      status,
+      diagram,
+      cover,
+      year,
+      index: projectIndex(slug),
+    }));
+  const titles = Object.fromEntries(allProjects.map((p) => [p.slug, p.title]));
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <>
+      <Intro />
+      <Hero />
+
+      <section id="work" aria-labelledby="work-title" className="py-24 md:py-36">
+        <div className="container-x">
+          <SectionHeader
+            id="work-title"
+            index="01"
+            label="Selected work"
+            title={
+              <>
+                Engineering
+                <br />
+                archive
+              </>
+            }
+            intro="Infrastructure, data platforms, research tooling and experiments. Each case study says what was built, what was only planned, and how I know."
+          />
+          <div data-reveal>
+            <WorkShowcase items={items} />
+          </div>
+        </div>
+      </section>
+
+      <section id="systems" aria-labelledby="systems-title" className="border-t border-line py-24 md:py-36">
+        <div className="container-x">
+          <SectionHeader
+            id="systems-title"
+            index="02"
+            label="Systems"
+            title={
+              <>
+                What I work
+                <br />
+                beneath
+              </>
+            }
+            intro="Six kinds of systems I keep coming back to, and the projects where each one shows up."
+          />
+          <div data-reveal>
+            <SystemsExplorer items={disciplines} titles={titles} />
+          </div>
+        </div>
+      </section>
+
+      <section id="skills" data-nav="systems" aria-labelledby="skills-title" className="border-t border-line py-24 md:py-36">
+        <div className="container-x">
+          <SectionHeader
+            id="skills-title"
+            index="03"
+            label="Technical skills"
+            title="Toolbox"
+            intro="Graded by evidence rather than self-rating: filled marks link to the project where the tool was used."
+          />
+          <Skills />
+        </div>
+      </section>
+
+      <section id="journey" data-nav="about" aria-labelledby="journey-title" className="border-t border-line pt-24 md:pt-36">
+        <div className="container-x">
+          <SectionHeader
+            id="journey-title"
+            index="04"
+            label="Journey"
+            title="Build log"
+            intro="Projects and study in order. No roles or employment are implied."
+          />
+        </div>
+        <div className="container-x lg:max-w-none lg:px-0">
+          <Timeline items={timeline} />
+        </div>
+      </section>
+
+      <section id="about" aria-labelledby="about-title" className="border-t border-line py-24 md:py-36">
+        <div className="container-x grid gap-12 md:grid-cols-12">
+          <p className="meta md:col-span-3" data-reveal>
+            <span className="!text-fg">05</span> / About
           </p>
+          <div className="md:col-span-9 lg:col-span-7">
+            <h2 id="about-title" className="sr-only">
+              About
+            </h2>
+            <p className="text-[clamp(1.5rem,1.1rem+1.8vw,2.75rem)] font-medium leading-[1.15] tracking-tight" data-reveal>
+              I&apos;m {site.name}, a Computer Science and Engineering student at the National Institute of Technology
+              Goa. I&apos;m interested in the systems behind modern software: cloud infrastructure, distributed
+              architectures, backend engineering, intelligent data platforms, and quantitative research.
+            </p>
+            <p className="mt-8 max-w-[60ch] text-[length:var(--text-lead)] leading-snug text-muted" data-reveal>
+              I enjoy moving between architecture and implementation, investigating failures, understanding trade-offs,
+              and turning a technical idea into a working system — and writing down honestly where it still falls short.
+            </p>
+            <dl className="mt-14 grid gap-px border border-line bg-line sm:grid-cols-3" data-reveal>
+              {[
+                ["Study", `${site.degree}`],
+                ["Institute", site.institute],
+                ["Based in", site.location],
+              ].map(([k, v]) => (
+                <div key={k} className="bg-bg p-5">
+                  <dt className="meta">{k}</dt>
+                  <dd className="mt-2">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+
+      <Contact />
+    </>
   );
 }

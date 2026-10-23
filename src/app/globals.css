@@ -1,26 +1,398 @@
 @import "tailwindcss";
 
+/* ---------- Design tokens ---------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* colour */
+  --bg: #090909;
+  --surface-1: #111111;
+  --surface-2: #171717;
+  --surface-3: #1f1f1f;
+  --fg: #f2efe9;
+  --fg-muted: #a3a09a;
+  --fg-subtle: #8a8781; /* ≥ 4.5:1 on --bg for small metadata */
+  --line: #262626;
+  --line-strong: #3a3a3a;
+  --accent: #d6e05a; /* muted acid yellow, used sparingly */
+  --accent-ink: #0b0b0b;
+
+  /* layout */
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --max-w: 1440px;
+  --measure: 68ch;
+  --nav-h: 64px;
+
+  /* type scale */
+  --text-meta: 0.75rem;
+  --text-body: clamp(1rem, 0.96rem + 0.2vw, 1.125rem);
+  --text-lead: clamp(1.125rem, 1rem + 0.6vw, 1.5rem);
+  --text-h3: clamp(1.25rem, 1.1rem + 0.7vw, 1.75rem);
+  --text-h2: clamp(2.25rem, 1.4rem + 4vw, 5.5rem);
+  --text-display: clamp(3rem, 0.8rem + 9.6vw, 11.5rem);
+
+  /* motion */
+  --dur-fast: 160ms;
+  --dur-base: 320ms;
+  --dur-slow: 800ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* layers */
+  --z-base: 1;
+  --z-nav: 40;
+  --z-menu: 50;
+  --z-intro: 60;
+  --z-skip: 70;
+
+  color-scheme: dark;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-subtle: var(--fg-subtle);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --breakpoint-xs: 30rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- Base ---------- */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-h) + 1rem);
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* Fine film grain over everything; decorative and cheap (one static SVG). */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- Primitives ---------- */
+@utility container-x {
+  width: 100%;
+  max-width: var(--max-w);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+@utility meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-variation-settings: "wdth" 75;
+  font-weight: 800;
+  line-height: 0.88;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+}
+
+@utility grid-lines {
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Animated underline for text links. */
+.link-u {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size var(--dur-base) var(--ease-out), color var(--dur-fast);
+}
+.link-u:hover,
+.link-u:focus-visible {
+  background-size: 100% 1px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 48px;
+  padding: 0 1.25rem;
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast),
+    border-color var(--dur-fast),
+    transform var(--dur-fast);
+}
+.btn:hover {
+  border-color: var(--fg);
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn svg {
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.btn:hover svg {
+  transform: translateX(3px);
+}
+.btn-primary {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.btn-primary:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--line-strong);
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.06em;
+  color: var(--fg-muted);
+  white-space: nowrap;
+}
+
+/* ---------- Reveal on scroll ----------
+   Content is visible by default. Only when JS has run (html.js) and motion is allowed
+   do [data-reveal] elements start hidden and fade in. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal] {
+    opacity: 0;
+    transform: translateY(24px);
+    transition:
+      opacity var(--dur-slow) var(--ease-out),
+      transform var(--dur-slow) var(--ease-out);
+    transition-delay: calc(var(--reveal-i, 0) * 80ms);
+  }
+  html.js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Hero ---------- */
+.hero-line {
+  display: block;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-line > span {
+    display: block;
+    animation: rise 1s var(--ease-out) both;
+    animation-delay: calc(0.35s + var(--i, 0) * 0.09s);
+  }
+  .hero-fade {
+    animation: fade 1s var(--ease-out) both;
+    animation-delay: calc(0.7s + var(--i, 0) * 0.1s);
+  }
+}
+@keyframes rise {
+  from {
+    transform: translateY(105%);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* Orbit graphic */
+@media (prefers-reduced-motion: no-preference) {
+  .orbit-spin {
+    animation: spin var(--orbit-dur, 40s) linear infinite;
+    transform-origin: center;
+    transform-box: view-box;
+  }
+  .orbit-rev {
+    animation-direction: reverse;
+  }
+  .pulse {
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Brief orbital intro. Never intercepts input; removed for reduced motion. */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-intro);
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  pointer-events: none;
+  animation: intro-out 0.35s var(--ease-in-out) 0.6s forwards;
+}
+@keyframes intro-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
+  }
+}
+
+/* ---------- Project reel (CSS 3D cylinder) ---------- */
+.reel {
+  --card-w: min(360px, 70vw);
+  --card-h: calc(var(--card-w) * 1.5);
+  overflow: hidden;
+  perspective: 1800px;
+  perspective-origin: 50% 40%;
+  height: calc(var(--card-h) + 3rem);
+  touch-action: pan-y;
+  user-select: none;
+}
+.reel-stage {
+  position: relative;
+  width: var(--card-w);
+  height: var(--card-h);
+  margin: 2rem auto 0;
+  transform-style: preserve-3d;
+  transform: translateZ(calc(var(--radius) * -1)) rotateY(var(--rot));
+  transition: transform 700ms var(--ease-out);
+}
+.reel-stage.is-dragging {
+  transition: none;
+}
+.reel-item {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(var(--angle)) translateZ(var(--radius));
+  backface-visibility: hidden;
+  transition: opacity var(--dur-base), filter var(--dur-base);
+}
+.reel-item[data-active="false"] {
+  opacity: 0.45;
+  filter: grayscale(1) brightness(0.7);
+}
+.reel-item[data-hidden="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Phones: the same markup becomes a plain vertical list. */
+@media (max-width: 767px) {
+  .reel {
+    perspective: none;
+    height: auto;
+    user-select: auto;
+  }
+  .reel-stage {
+    width: auto;
+    height: auto;
+    margin: 1.5rem 0 0;
+    display: grid;
+    gap: 1.5rem;
+    transform: none;
+    transform-style: flat;
+  }
+  .reel-item {
+    position: relative;
+    inset: auto;
+    transform: none;
+    backface-visibility: visible;
+  }
+  .reel-item[data-active],
+  .reel-item[data-hidden] {
+    opacity: 1;
+    filter: none;
+    pointer-events: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reel-stage,
+  .reel-item {
+    transition: none;
+  }
+}
+
+/* ---------- Timeline ---------- */
+.timeline-track {
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+.timeline-track > li {
+  scroll-snap-align: start;
+}
+
+/* Diagram edges draw in once visible. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js .diagram-edge {
+    stroke-dasharray: 600;
+    stroke-dashoffset: 600;
+    transition: stroke-dashoffset 1.6s var(--ease-out);
+  }
+  html.js .is-visible .diagram-edge {
+    stroke-dashoffset: 0;
+  }
+  html.js .is-visible .diagram-edge.planned {
+    stroke-dasharray: 4 4;
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
